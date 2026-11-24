@@ -610,6 +610,7 @@ export const ZH_DICT: Readonly<Record<string, string>> = {
   'Connect Google Calendar': '连接 Google 日历',
   'Use your own Google app': '使用你自己的 Google 应用',
   'Client ID and secret of a Google Cloud desktop app': 'Google Cloud 桌面应用的客户端 ID 和密钥',
+  'Google Cloud › Credentials › OAuth client ID of type "Desktop app". While that app is in "Testing", the sign-in ends after 7 days.': 'Google Cloud › 凭据 › 类型为“桌面应用”的 OAuth 客户端 ID。应用处于“测试”时，登录会在 7 天后失效。',
   'Google Calendar client secret': 'Google 日历客户端密钥',
   'Calendar link': '日历链接',
   'Calendar name': '日历名称',

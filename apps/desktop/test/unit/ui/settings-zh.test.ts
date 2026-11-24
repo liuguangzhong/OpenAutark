@@ -2,6 +2,7 @@
 // Owns: locale gating, exact copy, dynamic names, and strings that must stay literal. Never: a model, a secret, or a user profile.
 
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { afterEach, test } from 'node:test';
 import { lookupSettingsText, setSettingsLocaleForTest, setSettingsZhActiveForTest, settingsLang, zh, zhSearchExtra } from '../../../src/ui/settings/i18n.ts';
 import { searchSections } from '../../../src/ui/settings/sections.ts';
@@ -9,6 +10,29 @@ import { searchSections } from '../../../src/ui/settings/sections.ts';
 afterEach(() => {
   setSettingsLocaleForTest(null);
   setSettingsZhActiveForTest(false);
+});
+
+test('the desktop pages keep each hint with its own control', () => {
+  const general = readFileSync(new URL('../../../src/ui/settings/GeneralPage.tsx', import.meta.url), 'utf8');
+  assert.match(general, /label="Enter sends" hint=\{prefs\.enterSends \? 'Shift\+Enter for a new line' : 'Ctrl\+Enter sends'\}/);
+  assert.match(general, /label="Sound" hint="To-dos for you, blockers and important messages always arrive"/);
+  assert.doesNotMatch(general, /label="Enter sends"[\s\S]{0,120}https:\/\//);
+  assert.doesNotMatch(general, /label="Sound"[\s\S]{0,200}iPhone/);
+  const security = readFileSync(new URL('../../../src/ui/settings/SecurityPage.tsx', import.meta.url), 'utf8');
+  assert.equal(security.includes('Could not save'), false);
+});
+
+test('Electron\'s Chinese Windows locale (navigator.language zh-CN) is the switch', () => {
+  for (const locale of ['zh-CN', 'zh-Hans-CN']) {
+    setSettingsLocaleForTest(locale);
+    setSettingsZhActiveForTest(true);
+    assert.equal(zh('Enter sends'), '按 Enter 发送', locale);
+    assert.equal(zh('Shift+Enter for a new line'), 'Shift+Enter 换行', locale);
+  }
+  setSettingsLocaleForTest('en-US');
+  setSettingsZhActiveForTest(true);
+  assert.equal(zh('Enter sends'), 'Enter sends');
+  assert.equal(zh('gpt-4o'), 'gpt-4o');
 });
 
 test('Chinese settings copy is off unless the UI language is Chinese and Settings is active', () => {

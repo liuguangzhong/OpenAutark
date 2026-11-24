@@ -1,6 +1,6 @@
-// Layout and accessibility of the Simplified Chinese Settings surface. Chrome renders a bundled preview;
-// the test skips where Chrome is not installed. No account, secret, or model call.
-// Owns: overflow, wrapping, language, and accessible names. Never: the installed app or user data.
+// Faithful Settings preview: the same label/hint pairs as General, Models and Security, activated by the
+// browser locale (what Electron reports as navigator.language for a Chinese Windows user). No account or secret.
+// Owns: those pairings, wrapping, and the locale gate. Never: the installed app or user data.
 
 import assert from 'node:assert/strict';
 import { mkdirSync, readFileSync, existsSync } from 'node:fs';
@@ -8,7 +8,7 @@ import { test } from 'node:test';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import esbuild from 'esbuild';
-import { chromium } from 'playwright-core';
+import { chromium, type Page } from 'playwright-core';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../../..');
@@ -16,7 +16,9 @@ const styles = resolve(root, 'src/ui/styles');
 const chrome = ['/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium'].find((path) => existsSync(path));
 const shots = process.env.SCREENSHOTS ? resolve(process.env.SCREENSHOTS) : '/opt/cursor/artifacts/settings-zh';
 
-test('Chinese settings layout wraps, stays on screen, and exposes Chinese accessible names', { skip: !chrome, timeout: 60_000 }, async () => {
+const css = () => ['tokens.css', 'base.css', 'settings.css', 'overlays.css'].map((name) => readFileSync(resolve(styles, name), 'utf8')).join('\n');
+
+async function html(): Promise<string> {
   const bundled = await esbuild.build({
     absWorkingDir: root,
     entryPoints: [resolve(here, 'settings-zh-preview.tsx')],
@@ -28,8 +30,7 @@ test('Chinese settings layout wraps, stays on screen, and exposes Chinese access
     jsxImportSource: 'preact',
     logLevel: 'silent',
   });
-  const css = ['tokens.css', 'base.css', 'settings.css', 'overlays.css'].map((name) => readFileSync(resolve(styles, name), 'utf8')).join('\n');
-  const html = `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><style>
+  return `<!doctype html><html><head><meta charset="utf-8"><style>
     html, body { margin: 0; background: #f3f3f3; }
     .settings-zh-frame { display: flex; min-height: 100vh; }
     .settings-nav { width: 220px; flex: none; background: var(--sidebar); }
@@ -37,64 +38,87 @@ test('Chinese settings layout wraps, stays on screen, and exposes Chinese access
     .settings-top { padding: 16px 28px 0; }
     .settings-top h2 { margin: 0; font-size: 22px; }
     @media (max-width: 700px) { .settings-nav { display: none; } .settings-body { padding-inline: 16px; } }
-  </style><style>${css}</style></head><body><div id="app"></div><script>${bundled.outputFiles[0].text}</script></body></html>`;
+  </style><style>${css()}</style></head><body><div id="app"></div><script>${bundled.outputFiles[0].text}</script></body></html>`;
+}
 
+async function row(page: Page, label: string): Promise<string> {
+  return page.locator('.set-row').filter({ has: page.locator('.set-row-label', { hasText: label }) }).innerText();
+}
+
+test('Chinese Windows locale renders the real Settings pairs; English does not', { skip: !chrome, timeout: 90_000 }, async () => {
+  const pageHtml = await html();
   const browser = await chromium.launch({ executablePath: chrome, args: ['--no-sandbox', '--disable-dev-shm-usage'] });
+  mkdirSync(shots, { recursive: true });
   try {
-    const page = await browser.newPage({ viewport: { width: 1280, height: 820 } });
-    await page.setContent(html, { waitUntil: 'load' });
-    await page.waitForSelector('.settings-content');
-    const desktop = await page.evaluate(() => {
-      const view = document.querySelector('.settings-view') as HTMLElement;
-      const content = document.querySelector('.settings-content') as HTMLElement;
-      const nav = document.querySelector('.settings-nav') as HTMLElement;
-      const hints = [...document.querySelectorAll('.set-row-hint')].map((el) => ({ height: (el as HTMLElement).getBoundingClientRect().height, title: el.getAttribute('title') || '', text: (el.textContent || '').slice(0, 24) }));
-      const inputs = [...document.querySelectorAll('input')].map((el) => ({ value: (el as HTMLInputElement).value, label: el.getAttribute('aria-label') }));
-      const names = [...document.querySelectorAll('button, input, [role="switch"]')].map((el) => (el as HTMLElement).getAttribute('aria-label') || (el.textContent || '').trim()).filter(Boolean);
-      return {
-        lang: view.getAttribute('lang'),
-        nav: nav.innerText,
-        text: content.innerText,
-        inputs,
-        overflow: view.scrollWidth - view.clientWidth,
-        contentOverflow: content.scrollWidth - content.clientWidth,
-        hints,
-        names,
-        dialogTitle: document.querySelector('.dialog-header h2')?.textContent ?? '',
-        dialogMessage: document.querySelector('.dialog-message')?.textContent ?? '',
-      };
-    });
-    assert.equal(desktop.lang, 'zh-CN');
-    assert.match(desktop.nav, /通用/);
-    assert.match(desktop.nav, /技能与记忆/);
-    assert.match(desktop.text, /个人资料/);
-    assert.match(desktop.text, /无法保存/);
-    assert.deepEqual(desktop.inputs.find((input) => input.value === 'Northwind'), { value: 'Northwind', label: '公司' });
-    assert.deepEqual(desktop.inputs.find((input) => input.value === 'gpt-4o'), { value: 'gpt-4o', label: '模型名称' });
-    assert.ok(desktop.overflow <= 1, `settings view overflow ${desktop.overflow}`);
-    assert.ok(desktop.contentOverflow <= 1, `settings content overflow ${desktop.contentOverflow}`);
-    const tallest = Math.max(...desktop.hints.map((hint) => hint.height));
-    assert.ok(tallest >= 36, `long hint should use at least two lines, ${JSON.stringify(desktop.hints)}`);
-    assert.ok(desktop.hints.some((hint) => hint.title.includes('书面协议')), 'a clipped hint keeps the full Chinese text on its tooltip');
-    assert.equal(desktop.dialogTitle, '使用你自己的 Google 应用');
-    assert.match(desktop.dialogMessage, /客户端密钥/);
-    assert.ok(desktop.names.includes('保存') && desktop.names.includes('取消'));
-    assert.equal(desktop.text.includes('Could not save'), false);
-    assert.equal(desktop.text.includes('Save'), false);
+    const zh = await browser.newContext({ locale: 'zh-CN', viewport: { width: 1280, height: 900 } });
+    const page = await zh.newPage();
+    await page.setContent(pageHtml, { waitUntil: 'load' });
+    await page.waitForSelector('[data-section="general"]');
+    assert.equal(await page.evaluate(() => navigator.language), 'zh-CN');
+    assert.equal(await page.locator('.settings-view').getAttribute('lang'), 'zh-CN');
 
-    mkdirSync(shots, { recursive: true });
-    const dialog = page.locator('dialog');
-    if (await dialog.count()) await dialog.screenshot({ path: resolve(shots, 'settings-zh-dialog.png') });
-    await page.evaluate(() => document.querySelector('dialog')?.remove());
-    await page.screenshot({ path: resolve(shots, 'settings-zh-1280.png'), fullPage: true });
+    const enter = await row(page, '按 Enter 发送');
+    assert.match(enter, /Shift\+Enter/);
+    assert.match(enter, /换行/);
+    assert.doesNotMatch(enter, /https:\/\//);
+    const sound = await row(page, '声音');
+    assert.match(sound, /待办/);
+    assert.doesNotMatch(sound, /iPhone|Android/);
+    assert.equal(await page.locator('input[aria-label="公司"]').inputValue(), 'Northwind');
+    const view = page.locator('.settings-view');
+    const box = await view.evaluate((el) => ({ overflow: el.scrollWidth - el.clientWidth }));
+    assert.ok(box.overflow <= 1, `overflow ${box.overflow}`);
+    await page.screenshot({ path: resolve(shots, 'settings-zh-general-1280.png'), fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.waitForTimeout(100);
-    const phone = await page.evaluate(() => {
-      const view = document.querySelector('.settings-view') as HTMLElement;
-      return { overflow: view.scrollWidth - view.clientWidth };
-    });
-    assert.ok(phone.overflow <= 1, `phone overflow ${phone.overflow}`);
-    await page.screenshot({ path: resolve(shots, 'settings-zh-390.png'), fullPage: true });
+    await page.screenshot({ path: resolve(shots, 'settings-zh-general-390.png'), fullPage: true });
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    await page.getByRole('button', { name: '模型' }).click();
+    await page.waitForSelector('[data-section="models"]');
+    const work = await row(page, '工作');
+    assert.match(work, /每一次智能体回合/);
+    assert.match(work, /gpt-4o/);
+    assert.equal(await page.locator('input[aria-label="模型名称"]').inputValue(), 'gpt-4o');
+    await page.screenshot({ path: resolve(shots, 'settings-zh-models-1280.png'), fullPage: true });
+
+    await page.getByRole('button', { name: '安全' }).click();
+    await page.waitForSelector('[data-section="security"]');
+    const secure = await page.locator('[data-section="security"]').innerText();
+    assert.match(secure, /信任 AI/);
+    assert.match(secure, /安全模式/);
+    assert.match(secure, /付款、订阅/);
+    assert.equal(secure.includes('无法保存'), false);
+    assert.equal(secure.includes('Could not save'), false);
+    assert.equal(secure.includes('使用你自己的 Google 应用'), false);
+    await page.screenshot({ path: resolve(shots, 'settings-zh-security-1280.png'), fullPage: true });
+
+    await page.getByRole('button', { name: '日历' }).click();
+    await page.waitForSelector('[data-section="calendar"]');
+    const google = await row(page, '使用你自己的 Google 应用');
+    assert.match(google, /客户端 ID 和密钥/);
+    await page.getByRole('button', { name: '设置', exact: true }).click();
+    await page.locator('dialog h2').waitFor();
+    assert.equal(await page.locator('dialog h2').innerText(), '使用你自己的 Google 应用');
+    const dialogText = await page.locator('dialog').innerText();
+    assert.match(dialogText, /凭据/);
+    assert.match(dialogText, /7 天后失效/);
+    assert.match(dialogText, /请输入客户端密钥后再保存/);
+    assert.match(dialogText, /取消/);
+    assert.match(dialogText, /保存/);
+    assert.equal(dialogText.includes('无法保存'), false);
+    await page.locator('dialog').screenshot({ path: resolve(shots, 'settings-zh-dialog.png') });
+
+    const en = await browser.newContext({ locale: 'en-US', viewport: { width: 1280, height: 900 } });
+    const english = await en.newPage();
+    await english.setContent(pageHtml, { waitUntil: 'load' });
+    await english.waitForSelector('[data-section="general"]');
+    assert.equal(await english.evaluate(() => navigator.language), 'en-US');
+    assert.equal(await english.locator('.settings-view').getAttribute('lang'), null);
+    const englishEnter = await row(english, 'Enter sends');
+    assert.match(englishEnter, /Shift\+Enter for a new line/);
+    assert.equal((await english.locator('.settings-content').innerText()).includes('按 Enter 发送'), false);
+    await en.close();
+    await zh.close();
   } finally {
     await browser.close();
   }
