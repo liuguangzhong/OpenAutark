@@ -9,7 +9,8 @@
 
 import { useEffect, useState } from 'preact/hooks';
 import type { ConnectedApp } from '../../shared/model/apps.ts';
-import { confirm, Dialog, DialogActions } from '../lib/dialog.tsx';
+import { Dialog, DialogActions } from '../lib/dialog.tsx';
+import { confirm } from './prompts.ts';
 import type { MenuItem } from '../lib/popover.tsx';
 import { openExternal } from '../lib/platform.ts';
 import { rpc } from '../lib/rpc.ts';

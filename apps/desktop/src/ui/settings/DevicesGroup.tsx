@@ -34,7 +34,7 @@ import type { Device, UpdateAnswer } from '../../shared/model/devices.ts';
 import type { Person } from '../../shared/model/people.ts';
 import type { RelayState } from '../../shared/model/relay.ts';
 import type { RemoteState } from '../../shared/model/remote.ts';
-import { confirm } from '../lib/dialog.tsx';
+import { confirm } from './prompts.ts';
 import { listTime } from '../lib/format.ts';
 import { isPersonSession } from '../lib/people.ts';
 import { isMobile, platform } from '../lib/platform.ts';

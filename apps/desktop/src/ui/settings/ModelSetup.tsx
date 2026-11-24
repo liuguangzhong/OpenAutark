@@ -12,7 +12,7 @@
 import type { ComponentChildren } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { envKeyProvider, type DetectionReport, type FoundLogin } from '../../shared/model/providers.ts';
-import { choose } from '../lib/dialog.tsx';
+import { choose } from './prompts.ts';
 import { rpc } from '../lib/rpc.ts';
 import { accounts, loadModels } from '../lib/store.ts';
 import { pushToast } from '../lib/toasts.ts';

@@ -296,3 +296,14 @@ dialog.dialog.voice-words-dialog { height: min(560px, calc(100vh - 2 * var(--dia
 .own-server-command { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 8px; padding: 8px 10px; border-radius: 8px; background: var(--hover); }
 .own-server-command code { flex: 1; min-width: 0; overflow-wrap: anywhere; user-select: all; }
 .own-server-file { color: var(--muted); font-size: calc(12px * var(--ui-text, 1)); overflow-wrap: anywhere; }
+
+/* Simplified Chinese settings copy (i18n.ts). English layout is unchanged. Long labels wrap, and a reserved hint may use two lines; the full text stays on the tooltip. */
+.settings-locale-zh .dialog-header h2 { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.35; overflow-wrap: anywhere; }
+.settings-locale-zh.settings-nav .settings-nav-item > span:last-child { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.35; }
+.settings-locale-zh .set-group-head h3,
+.settings-locale-zh .set-row-label,
+.settings-locale-zh .dialog-message { overflow-wrap: anywhere; }
+.settings-locale-zh .set-row-hint.reserved {
+  white-space: normal; text-overflow: ellipsis; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; min-height: 3em; height: auto;
+}
+.settings-locale-zh .segmented { flex-wrap: wrap; overflow-x: visible; }

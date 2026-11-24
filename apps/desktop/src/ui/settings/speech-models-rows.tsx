@@ -7,7 +7,7 @@
 
 import { useEffect } from 'preact/hooks';
 import { LOCAL_SPEECH_MODELS, type LocalSpeechModel } from '../../shared/model/local-speech-models.ts';
-import { confirm } from '../lib/dialog.tsx';
+import { confirm } from './prompts.ts';
 import { rpc } from '../lib/rpc.ts';
 import { can } from '../lib/session.ts';
 import { settings } from '../lib/store.ts';

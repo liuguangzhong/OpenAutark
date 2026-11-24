@@ -14,6 +14,7 @@ import { navigate, route } from '../lib/router.ts';
 import { can } from '../lib/session.ts';
 import { nextSearchHit, pageHits } from './search-marks.ts';
 import { resolveVisibleSection, searchSections, visibleSections } from './sections.ts';
+import { zh, ZhScope, settingsLang, settingsLocaleClass } from './i18n.ts';
 import { settingsWords, wantSettingsWords } from './settings-words.ts';
 
 /** Shared with Settings.tsx so the content can highlight matching rows. */
@@ -25,9 +26,9 @@ const searchOpen = signal(false);
 export function settingsNavHeader(): HeaderProps {
   const query = settingsSearch.value;
   return {
-    title: 'Settings',
+    title: zh('Settings'),
     search: {
-      label: 'Search settings', placeholder: 'Search settings', open: searchOpen.value || query !== '', query,
+      label: zh('Search settings'), placeholder: zh('Search settings'), open: searchOpen.value || query !== '', query,
       onQuery: (text) => { settingsSearch.value = text; if (text.trim()) wantSettingsWords(); },
       onOpenChange: (open) => { searchOpen.value = open; },
       onSubmit: (text) => {
@@ -42,19 +43,27 @@ export function settingsNavHeader(): HeaderProps {
 }
 
 export function SettingsNav() {
+  return (
+    <ZhScope>
+      <SettingsNavList />
+    </ZhScope>
+  );
+}
+
+function SettingsNavList() {
   // The phone's list shows only while no page is open: nothing is highlighted there.
   const current = route.value.view === 'settings' && !isMobile.value ? resolveVisibleSection(route.value.section, can).id : null;
   const found = new Set(searchSections(settingsSearch.value, visibleSections(can), settingsWords.value).map((section) => section.id));
   const matches = visibleSections(can).filter((section) => found.has(section.id) || (section.id === current && pageHits.value > 0));
   return (
-    <nav class="settings-nav" aria-label="Settings pages">
+    <nav class={`settings-nav${settingsLocaleClass()}`} lang={settingsLang()} aria-label="Settings pages">
       <ul class="settings-nav-list">
         {matches.map((section) => (
           <li key={section.id}>
             <button type="button" class={`settings-nav-item${section.id === current ? ' selected' : ''}`} aria-current={section.id === current ? 'page' : undefined}
               onClick={() => navigate({ view: 'settings', section: section.id }, { replace: route.value.view === 'settings' })}>
               <Icon name={section.icon} size={18} />
-              <span>{section.title}</span>
+              <span title={section.title}>{section.title}</span>
             </button>
           </li>
         ))}

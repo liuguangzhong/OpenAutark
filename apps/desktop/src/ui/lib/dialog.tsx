@@ -70,7 +70,7 @@ export function DialogSlot(props: { anywhere?: boolean }) {
   );
 }
 
-export function Dialog(props: { open: boolean; onClose: () => void; title?: string; class?: string; children: ComponentChildren; width?: number }) {
+export function Dialog(props: { open: boolean; onClose: () => void; title?: string; closeLabel?: string; class?: string; children: ComponentChildren; width?: number }) {
   const ref = useRef<HTMLDialogElement>(null);
   const [footer, setFooter] = useState<HTMLElement | null>(null);
   const [modal, setModal] = useState(false); // in the top layer: the slot can follow it there
@@ -101,8 +101,8 @@ export function Dialog(props: { open: boolean; onClose: () => void; title?: stri
         <div class="dialog-body">
           {props.title && (
             <header class="dialog-header">
-              <h2>{props.title}</h2>
-              <button type="button" class="icon-button small" aria-label="Close" onClick={props.onClose}><Icon name="x" size={18} /></button>
+              <h2 title={props.title}>{props.title}</h2>
+              <button type="button" class="icon-button small" aria-label={props.closeLabel ?? 'Close'} onClick={props.onClose}><Icon name="x" size={18} /></button>
             </header>
           )}
           <FooterSlot.Provider value={footer}>
@@ -141,6 +141,8 @@ interface ConfirmRequest {
   title: string;
   body?: string;
   confirmLabel: string;
+  cancelLabel?: string;
+  closeLabel?: string;
   danger?: boolean;
   /** askText: the field's label and starting value (no text field without it). */
   field?: { label: string; value: string };
@@ -163,19 +165,19 @@ function ask(request: Omit<ConfirmRequest, 'resolve'>): Promise<string | null> {
 addBackLayer({ open: () => pending.peek() !== null, close: () => { pending.peek()?.resolve(null); pending.value = null; } });
 
 /** Asks once; resolves true when confirmed. */
-export async function confirm(options: { title: string; body?: string; confirmLabel?: string; danger?: boolean }): Promise<boolean> {
+export async function confirm(options: { title: string; body?: string; confirmLabel?: string; cancelLabel?: string; closeLabel?: string; danger?: boolean }): Promise<boolean> {
   return (await ask({ confirmLabel: 'Confirm', ...options })) !== null;
 }
 
 /** Asks for one line of text (Rename); resolves the trimmed text, or null when cancelled or left empty. */
-export async function askText(options: { title: string; label: string; value?: string; confirmLabel?: string }): Promise<string | null> {
-  const text = await ask({ title: options.title, confirmLabel: options.confirmLabel ?? 'Save', field: { label: options.label, value: options.value ?? '' } });
+export async function askText(options: { title: string; label: string; value?: string; confirmLabel?: string; cancelLabel?: string; closeLabel?: string }): Promise<string | null> {
+  const text = await ask({ title: options.title, confirmLabel: options.confirmLabel ?? 'Save', cancelLabel: options.cancelLabel, closeLabel: options.closeLabel, field: { label: options.label, value: options.value ?? '' } });
   return text?.trim() || null;
 }
 
 /** Asks to pick one of a few options (radio buttons, `value` the one picked first); resolves the picked value, or null when cancelled. */
-export async function choose(options: { title: string; body?: string; choices: Array<{ value: string; label: string; hint?: string }>; value: string; confirmLabel?: string }): Promise<string | null> {
-  return ask({ title: options.title, ...(options.body ? { body: options.body } : {}), confirmLabel: options.confirmLabel ?? 'Confirm', choices: options.choices, choice: options.value });
+export async function choose(options: { title: string; body?: string; choices: Array<{ value: string; label: string; hint?: string }>; value: string; confirmLabel?: string; cancelLabel?: string; closeLabel?: string }): Promise<string | null> {
+  return ask({ title: options.title, ...(options.body ? { body: options.body } : {}), confirmLabel: options.confirmLabel ?? 'Confirm', cancelLabel: options.cancelLabel, closeLabel: options.closeLabel, choices: options.choices, choice: options.value });
 }
 
 /** Mounted once by the shell. */
@@ -186,7 +188,7 @@ export function ConfirmHost() {
   useLayoutEffect(() => { setText(request?.field?.value ?? ''); setPicked(request?.choice ?? ''); }, [request]);
   const done = (answer: string | null) => { request?.resolve(answer); pending.value = null; };
   return (
-    <Dialog open={!!request} onClose={() => done(null)} title={request?.title} width={400}>
+    <Dialog open={!!request} onClose={() => done(null)} title={request?.title} closeLabel={request?.closeLabel} width={400}>
       <form onSubmit={(event) => { event.preventDefault(); done(request?.choices ? picked : text); }}>
         {request?.body && <p class="dialog-text">{request.body}</p>}
         {request?.choices && (
@@ -204,7 +206,7 @@ export function ConfirmHost() {
             onInput={(event) => setText((event.currentTarget as HTMLInputElement).value)} />
         )}
         <div class="dialog-actions">
-          <button type="button" class="button secondary" onClick={() => done(null)}>Cancel</button>
+          <button type="button" class="button secondary" onClick={() => done(null)}>{request?.cancelLabel ?? 'Cancel'}</button>
           <button type="submit" class={`button ${request?.danger ? 'danger-fill' : 'primary'}`} disabled={!!request?.field && !text.trim()}>{request?.confirmLabel}</button>
         </div>
       </form>

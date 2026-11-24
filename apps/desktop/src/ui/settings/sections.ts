@@ -9,6 +9,7 @@
 import type { MethodName } from '../../shared/api/methods.ts';
 import type { IconName } from '../lib/icons.tsx';
 import { DEFAULT_SETTINGS_PAGE, type SettingsPage } from '../lib/router.ts';
+import { zh, zhSearchExtra } from './i18n.ts';
 
 export interface SectionInfo {
   id: SettingsPage;
@@ -93,7 +94,7 @@ export function searchSections(text: string, sections: readonly SectionInfo[] = 
   const asked = text.toLowerCase().split(/\s+/).filter(Boolean);
   if (!asked.length) return [...sections];
   return sections.filter((section) => {
-    const haystack = `${section.title} ${section.keywords.join(' ')} ${words[section.id] ?? ''}`.toLowerCase();
+    const haystack = `${section.title} ${zh(section.title)} ${zhSearchExtra(section.id)} ${section.keywords.join(' ')} ${words[section.id] ?? ''}`.toLowerCase();
     return asked.every((word) => haystack.includes(word));
   });
 }

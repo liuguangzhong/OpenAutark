@@ -30,6 +30,7 @@ import { groupAccounts, providerGroup, type ProviderGroup } from './providers.ts
 import { ScheduledPage } from './ScheduledPage.tsx';
 import { SecretsPage } from './SecretsPage.tsx';
 import { SecurityPage } from './SecurityPage.tsx';
+import { zh, ZhScope, settingsLang, settingsLocaleClass } from './i18n.ts';
 import { clearSearchMarks, markSearch } from './search-marks.ts';
 import { resolveVisibleSection } from './sections.ts';
 import { settingsSearch } from './SettingsNav.tsx';
@@ -91,10 +92,18 @@ const CONTENT: Readonly<Record<SettingsPage, ComponentType>> = {
 
 /** The name of the page #/settings/<section> shows on this connection (the phone's top row). */
 export function settingsSectionTitle(section: string | undefined): string {
-  return resolveVisibleSection(section, can).title;
+  return zh(resolveVisibleSection(section, can).title);
 }
 
 export function Settings() {
+  return (
+    <ZhScope>
+      <SettingsBody />
+    </ZhScope>
+  );
+}
+
+function SettingsBody() {
   const current = route.value;
   const info = resolveVisibleSection(current.view === 'settings' ? current.section : undefined, can);
   const Content = CONTENT[info.id];
@@ -123,7 +132,7 @@ export function Settings() {
     return () => { observer.disconnect(); clearTimeout(stop); if (pending) cancelAnimationFrame(pending); };
   }, [search, info.id]);
   return (
-    <div class="settings-view">
+    <div class={`settings-view${settingsLocaleClass()}`} lang={settingsLang()}>
       {!isMobile.value && <Header zone="main" class="settings-top" title={info.title}
         lead={{ id: 'back', icon: 'arrow-left', label: 'Back to workspace', onClick: closeSettings }}
         near={can('system.root') ? [{ id: 'open-file', icon: info.file.path.includes('.') ? 'file' : 'folder', label: info.file.label, onClick: () => void openInTab(info.file.path, info.file.base), contextMenu: () => [{ items: [{ label: 'Open with system', onSelect: () => void openInData(info.file.path, info.file.base) }] }] }] : []} />}

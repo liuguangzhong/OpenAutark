@@ -13,6 +13,7 @@ import { Select as ListSelect } from '../lib/select.tsx';
 import { toastError } from '../lib/toasts.ts';
 import { Button } from '../lib/ui.tsx';
 import { useLoad } from '../lib/use-load.ts';
+import { zh } from './i18n.ts';
 
 /** Clears an optional settings field: the runtime merge treats `null` as "remove key". */
 export const CLEAR = null as unknown as undefined;
@@ -184,7 +185,7 @@ export async function act<T>(run: () => Promise<T>, failTitle = 'Action failed')
   try {
     return await run();
   } catch (error) {
-    toastError(new Error(errorText(error)), failTitle);
+    toastError(new Error(errorText(error)), zh(failTitle));
     return undefined;
   }
 }

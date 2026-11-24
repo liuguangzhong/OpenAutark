@@ -15,7 +15,8 @@
 
 import { useEffect, useState } from 'preact/hooks';
 import type { CompanyEntry } from '../../shared/model/companies.ts';
-import { confirm, Dialog, DialogActions } from '../lib/dialog.tsx';
+import { Dialog, DialogActions } from '../lib/dialog.tsx';
+import { confirm } from './prompts.ts';
 import { bridge, platform } from '../lib/platform.ts';
 import { rpc } from '../lib/rpc.ts';
 import { can } from '../lib/session.ts';

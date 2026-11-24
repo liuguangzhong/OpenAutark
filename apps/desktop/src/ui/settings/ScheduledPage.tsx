@@ -22,7 +22,7 @@ import type { MenuSection } from '../lib/popover.tsx';
 import { rpc } from '../lib/rpc.ts';
 import { can } from '../lib/session.ts';
 import { agentName, conversations } from '../lib/store.ts';
-import { confirm } from '../lib/ui.tsx';
+import { confirm } from './prompts.ts';
 import { agentEntries, groupByChat, levelOf, scheduleText } from '../tasks/schedule-edit.ts';
 import { byNextRun, scheduleState } from '../tasks/schedule-state.ts';
 import { ensureSchedules, schedules, schedulesLoaded } from '../tasks/schedules.ts';

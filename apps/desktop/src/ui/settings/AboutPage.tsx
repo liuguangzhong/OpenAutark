@@ -14,7 +14,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import type { RestoreStatus } from '../../shared/model/restore.ts';
 import type { UpdateState } from '../../shared/model/system.ts';
-import { confirm } from '../lib/dialog.tsx';
+import { confirm } from './prompts.ts';
 import { fileSize, time } from '../lib/format.ts';
 import { bridge } from '../lib/platform.ts';
 import { rpc } from '../lib/rpc.ts';

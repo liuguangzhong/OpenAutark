@@ -15,7 +15,8 @@ import type { SecretGroup, SecretInfo } from '../../shared/model/security.ts';
 import { errorText, rpc } from '../lib/rpc.ts';
 import { can } from '../lib/session.ts';
 import { pushToast, toastError } from '../lib/toasts.ts';
-import { Button, confirm } from '../lib/ui.tsx';
+import { Button } from '../lib/ui.tsx';
+import { confirm } from './prompts.ts';
 import { act, Group, Row, useAsync } from './controls.tsx';
 import type { SecretTarget } from './SecretForm.tsx';
 import {

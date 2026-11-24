@@ -19,7 +19,7 @@ import { useState } from 'preact/hooks';
 import type { Account, ModelInfo } from '../../shared/model/providers.ts';
 import { isPlanProvider } from '../../shared/model/plan-roles.ts';
 import { creditsPossible } from '../../shared/model/charge.ts';
-import { askText, confirm } from '../lib/dialog.tsx';
+import { askText, confirm } from './prompts.ts';
 import { limitSlots, nextCredit, otherWindows, PLAN_SLOTS, resetButtonLabel, resetClock, resetConfirmText, resetCount, resetExpiryText, resetOutcomeText } from '../lib/limits.ts';
 import type { MenuItem, MenuSection } from '../lib/popover.tsx';
 import { rpc } from '../lib/rpc.ts';
