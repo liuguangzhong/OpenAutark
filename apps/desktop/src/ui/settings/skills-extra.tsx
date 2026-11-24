@@ -6,7 +6,7 @@
 
 import { useState } from 'preact/hooks';
 import { Dialog, DialogActions } from '../lib/dialog.tsx';
-import { confirm } from '../lib/ui.tsx';
+import { confirm } from './prompts.ts';
 import { useContextMenu } from '../lib/context-menu.tsx';
 import { errorText, rpc } from '../lib/rpc.ts';
 import { can } from '../lib/session.ts';

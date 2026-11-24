@@ -11,7 +11,8 @@
 
 import { useEffect, useState } from 'preact/hooks';
 import type { CalendarSource } from '../../shared/model/calendar.ts';
-import { confirm, Dialog, DialogActions } from '../lib/dialog.tsx';
+import { Dialog, DialogActions } from '../lib/dialog.tsx';
+import { confirm } from './prompts.ts';
 import { openExternal } from '../lib/platform.ts';
 import { errorText, rpc } from '../lib/rpc.ts';
 import { can, canEditOwnerSettings } from '../lib/session.ts';

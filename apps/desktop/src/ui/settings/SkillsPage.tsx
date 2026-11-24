@@ -12,7 +12,7 @@ import { can } from '../lib/session.ts';
 import { agentName, agents } from '../lib/store.ts';
 import { skillTitle } from '../team/agent-core-model.ts';
 import { openFileTab, openWithSystem, pathMenu } from '../workspace/file-tabs.ts';
-import { confirm } from '../lib/ui.tsx';
+import { confirm } from './prompts.ts';
 import { useLoad } from '../lib/use-load.ts';
 import { act, Group, Note, Row, useAsync } from './controls.tsx';
 import { MemoryTree } from './MemoryTree.tsx';

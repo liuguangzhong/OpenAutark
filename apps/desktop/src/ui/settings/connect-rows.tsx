@@ -27,6 +27,7 @@ import { errorText, rpc } from '../lib/rpc.ts';
 import { can } from '../lib/session.ts';
 import { settings } from '../lib/store.ts';
 import { pushToast, toastError } from '../lib/toasts.ts';
+import { zh } from './i18n.ts';
 import { Button } from '../lib/ui.tsx';
 import { act, Row, TextField, useAsync, useBusy } from './controls.tsx';
 import { COMPANY_ID_BASE, MY_ID_HINT, connectLine, groupDigits, incomingText, nearbyGroups, nearbyHint, nearbyTarget, remoteIdHint, typedTarget, waitsAsMember } from './connect-text.ts';
@@ -85,7 +86,7 @@ export function IdRows(props: { remote?: RemoteState; relay?: RelayState }) {
 function IdRow(props: { label: string; id?: string; hint: string }) {
   const { id } = props;
   const copy = () => {
-    if (id) navigator.clipboard.writeText(groupDigits(id)).then(() => pushToast({ title: `${props.label} copied` }), (cause: unknown) => toastError(cause, 'Could not copy'));
+    if (id) navigator.clipboard.writeText(groupDigits(id)).then(() => pushToast({ title: zh(`${props.label} copied`) }), (cause: unknown) => toastError(cause, zh('Could not copy')));
   };
   return (
     <Row label={props.label} hint={props.hint} reserve>
@@ -170,9 +171,9 @@ export function ConnectRow(props: { remote?: RemoteState; error: string | null; 
     try { await rpc.call('remote.confirm'); } catch (cause) { props.onError(errorText(cause)); }
   });
   const rename = (name: string) => {
-    if (name.trim()) void rpc.call('remote.name', { name: name.trim() }).catch((cause) => toastError(cause, 'Could not change the name'));
+    if (name.trim()) void rpc.call('remote.name', { name: name.trim() }).catch((cause) => toastError(cause, zh('Could not change the name')));
   };
-  const end = () => void rpc.call('remote.cancel').catch((cause) => toastError(cause, 'Could not cancel'));
+  const end = () => void rpc.call('remote.cancel').catch((cause) => toastError(cause, zh('Could not cancel')));
   return (
     <div class="set-row remote-connect-row">
       <div class="set-row-text">
